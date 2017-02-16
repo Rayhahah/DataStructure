@@ -4,28 +4,24 @@ import java.util.List;
 
 /**
  * MyLinkedList() 构造函数
- * 
  * void clearList() 清空链表数据
  * 
  * boolean isEmpty() 链表判空
- * 
  * int getLength() 链表的当前长度
  * 
  * T get(int position) 根据坐标获取链表中的元素
- * 
  * int getPosition(T t) 根据数据对象获取在链表中的位置坐标
  * 
- * T prior(T t) 根据数据对象获取 前驱数据对象
+ * boolean insert(T t) / insert(int position,T t) 
+ * 向链表末尾插入数据对象 / 向指定位置插入数据对象
  * 
- * T next(T t) 根据数据对象获取 后继数据对象
+ * boolean delete(T t) / delete (int position) 
+ * 删除在链表中的传入数据对象 / 删除指定位置的节点
  * 
- * boolean insert(T t) / insert(int position,T t) 向链表末尾插入数据对象 / 向指定位置插入数据对象
- * 
- * boolean delete(T t) / delete (int position) 删除在链表中的传入数据对象 / 删除指定位置的节点
- * 
- * void traverse(int position) 启动遍历链表
- * 
- * abstract void onTraverse() 遍历顺序表得到对象的具体操作
+ * void traverse(int position) 
+ * 启动遍历链表
+ * abstract void onTraverse() 
+ * 遍历顺序表得到对象的具体操作
  * 
  * @author Rayhahah
  *
@@ -37,7 +33,7 @@ public abstract class MyLinkedList<T> {
 	private int mLength;
 
 	public MyLinkedList() {
-		first = new MyNode<T>(null, null, null);
+		first = new MyNode<T>(null, null);
 		mLength = 0;
 	}
 
@@ -57,7 +53,6 @@ public abstract class MyLinkedList<T> {
 		for (MyNode<T> temp = first; temp != null;) {
 			MyNode<T> next = temp.next;
 			temp.next = null;
-			temp.pior = null;
 			temp.t = null;
 			temp = next;
 		}
@@ -71,7 +66,7 @@ public abstract class MyLinkedList<T> {
 	 * @return
 	 */
 	private boolean isNodeNull(MyNode<T> myNode) {
-		if (myNode.next == null && myNode.pior == null && myNode.t == null) {
+		if (myNode.next == null && myNode.t == null) {
 			return true;
 		}
 		return false;
@@ -100,21 +95,21 @@ public abstract class MyLinkedList<T> {
 		}
 		mLength++;
 		MyNode<T> currentNode = first;
+		MyNode<T> currentNodeBefore = null;
+		//插入位置是头节点的情况
 		if (position == 0) {
-			MyNode<T> newNode = new MyNode<T>(null, t, first.next);
-			if (first.next != null) {
-				first.next.pior = newNode;
-			}
+			MyNode<T> newNode = new MyNode<T>(t, first);
 			first = newNode;
+			return true;
 		}
 		for (int i = 0; i < position; i++) {
+			currentNodeBefore = currentNode;
 			currentNode = currentNode.next;
 		}
-		MyNode<T> newNode = new MyNode<>(currentNode.pior, t, currentNode);
-		currentNode.pior.next = newNode;
-		if (currentNode.next != null) {
-			currentNode.next.pior = newNode;
-		}
+		//指向后节点
+		MyNode<T> newNode = new MyNode<>(t, currentNode);
+		//前节点指向新节点就等于插入
+		currentNodeBefore.next = newNode;
 		return true;
 	}
 
@@ -133,13 +128,14 @@ public abstract class MyLinkedList<T> {
 			return deleteFirst(first.next);
 		}
 		MyNode<T> currentNode = first;
+		MyNode<T> currentNodeBefore = null;
 		for (int i = 0; i < position; i++) {
+			currentNodeBefore = currentNode;
 			currentNode = currentNode.next;
 		}
-		currentNode.pior.next = currentNode.next;
-		if (currentNode.next != null) {
-			currentNode.next.pior = currentNode.pior;
-		}
+		//将要删除的节点的前节点指向  要删除的节点的后节点
+		//失去了联系节点就等于被删除了
+		currentNodeBefore.next = currentNode.next;
 		return true;
 	}
 
@@ -151,9 +147,6 @@ public abstract class MyLinkedList<T> {
 	 */
 	private boolean deleteFirst(MyNode<T> node) {
 		first = node;
-		if (first != null) {
-			first.pior = null;
-		}
 		return true;
 	}
 
@@ -169,22 +162,24 @@ public abstract class MyLinkedList<T> {
 		}
 
 		mLength--;
-		for (MyNode<T> x = first; !isNodeNull(x);) {
-			if (x.t == t) {
-				//删除的节点是头结点
-				if (x.pior == null) {
-					return deleteFirst(x.next);
+		// 现在节点
+		MyNode<T> currentNode = first;
+		// 前节点
+		MyNode<T> currentNodeBefore = null;
+		while (currentNode.t != null) {
+			if (currentNode.t == t) {
+				// 头节点
+				if (currentNodeBefore == null) {
+					first = currentNode.next;
 				} else {
-					x.pior.next = x.next;
-					if (x.next != null) {
-						x.next.pior = x.pior;
-					}
-					return true;
+					currentNodeBefore.next = currentNode.next;
 				}
+				return false;
 			}
-			x = x.next;
+			currentNodeBefore = currentNode;
+			currentNode = currentNode.next;
 		}
-		return true;
+		return false;
 	}
 
 	/**
